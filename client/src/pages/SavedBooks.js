@@ -7,13 +7,20 @@ import {
   Col
 } from 'react-bootstrap';
 
-import { getMe, deleteBook } from '../utils/API';
+import { useQuery, useMutation } from '@apollo/client';
+import {QUERY_ME as GET_ME} from "../utils/queries";
+import {REMOVE_BOOK} from "../utils/mutation";
 import Auth from '../utils/auth';
 import { removeBookId } from '../utils/localStorage';
 
 const SavedBooks = () => {
-  const [userData, setUserData] = useState({});
-
+  const { loading, data}= useQuery(GET_ME);
+  let userData = data?.me || {};
+  console.log(userData);
+  const {getUserData, setUserData}= useState()
+  const [removeBook]= useMutation(REMOVE_BOOK);
+  
+  
   // use this to determine if `useEffect()` hook needs to run again
   const userDataLength = Object.keys(userData).length;
 
@@ -26,7 +33,7 @@ const SavedBooks = () => {
           return false;
         }
 
-        const response = await getMe(token);
+        const response = await GET_ME(token);
 
         if (!response.ok) {
           throw new Error('something went wrong!');
@@ -51,7 +58,7 @@ const SavedBooks = () => {
     }
 
     try {
-      const response = await deleteBook(bookId, token);
+      const response = await removeBook(bookId, token);
 
       if (!response.ok) {
         throw new Error('something went wrong!');
@@ -64,7 +71,7 @@ const SavedBooks = () => {
     } catch (err) {
       console.error(err);
     }
-  };
+  
 
   // if data isn't here yet, say so
   if (!userDataLength) {
@@ -81,11 +88,12 @@ const SavedBooks = () => {
       <Container>
         <h2 className='pt-5'>
           {userData.savedBooks.length
-            ? `Viewing ${userData.savedBooks.length} saved ${userData.savedBooks.length === 1 ? 'book' : 'books'}:`
+            ? `Viewing ${userData.savedBooks.length} saved ${
+              userData.savedBooks.length === 1 ? 'book' : 'books'}:`
             : 'You have no saved books!'}
         </h2>
         <Row>
-          {userData.savedBooks.map((book) => {
+          {userData.savedBooks?.map((book) => {
             return (
               <Col md="4">
                 <Card key={book.bookId} border='dark'>
@@ -107,5 +115,5 @@ const SavedBooks = () => {
     </>
   );
 };
-
+}
 export default SavedBooks;
